@@ -85,6 +85,9 @@ struct LanguageProcessingSettingsView: View {
     @Binding var preset: String
     @Binding var customInstructions: String
     @Binding var cloudPostProcessingModel: String
+    /// The transcription model itself reads screen text (Gemini's prompt path),
+    /// so the Screen Text toggle stays available with post-processing off.
+    private let screenTextWorksWithoutPostProcessing: Bool
 
     @State private var showLanguageModelInfo = false
     @State private var showPostProcessingInfo = false
@@ -110,9 +113,11 @@ struct LanguageProcessingSettingsView: View {
         language: Binding<String>,
         englishSpelling: Binding<EnglishSpelling>,
         enableScreenOCR: Binding<Bool>,
-        cloudPostProcessingModel: Binding<String>
+        cloudPostProcessingModel: Binding<String>,
+        screenTextWorksWithoutPostProcessing: Bool = false
     ) {
         self.activeCloudProvider = activeCloudProvider
+        self.screenTextWorksWithoutPostProcessing = screenTextWorksWithoutPostProcessing
         self._preset = preset
         self._customInstructions = customInstructions
         self._postProcessingMode = postProcessingMode
@@ -437,6 +442,21 @@ struct LanguageProcessingSettingsView: View {
     }
 
     @ViewBuilder
+    private var screenTextToggle: some View {
+        SettingsToggleRow(
+            title: LocalizedStringKey("modes.toggle.screenText.title"),
+            subtitle: LocalizedStringKey("modes.toggle.screenText.subtitle"),
+            isOn: $enableScreenOCR,
+            standalone: false
+        )
+        .padding(.leading, -8)
+
+        if enableScreenOCR {
+            screenTextPermissionStatus
+        }
+    }
+
+    @ViewBuilder
     private var screenTextPermissionStatus: some View {
         HStack(spacing: 8) {
             if hasScreenRecordingPermission {
@@ -521,6 +541,13 @@ struct LanguageProcessingSettingsView: View {
                         }
 
                         Spacer()
+                    }
+
+                    // Gemini reads screen text itself, without post-processing.
+                    if postProcessingMode == .off && screenTextWorksWithoutPostProcessing {
+                        Divider()
+
+                        screenTextToggle
                     }
 
                     if postProcessingMode != .off {
@@ -856,17 +883,7 @@ struct LanguageProcessingSettingsView: View {
 
                         Divider()
 
-                        SettingsToggleRow(
-                            title: LocalizedStringKey("modes.toggle.screenText.title"),
-                            subtitle: LocalizedStringKey("modes.toggle.screenText.subtitle"),
-                            isOn: $enableScreenOCR,
-                            standalone: false
-                        )
-                        .padding(.leading, -8)
-
-                        if enableScreenOCR {
-                            screenTextPermissionStatus
-                        }
+                        screenTextToggle
 
                         Divider()
 
@@ -968,7 +985,7 @@ struct LanguageProcessingSettingsView: View {
                 ensureValidCloudPostProcessingModel()
             }
             .onChange(of: postProcessingMode) { _, newValue in
-                if newValue == .off {
+                if newValue == .off && !screenTextWorksWithoutPostProcessing {
                     enableScreenOCR = false
                 }
                 ensureValidCloudProvider()
@@ -993,6 +1010,13 @@ struct LanguageProcessingSettingsView: View {
                 if currentProvider.isLocal {
                     ensureValidLanguageModelSelection()
                 }
+            }
+        }
+        .onChange(of: screenTextWorksWithoutPostProcessing) { _, worksWithout in
+            // Switching away from Gemini with post-processing off leaves
+            // nothing that reads the screen text.
+            if !worksWithout && postProcessingMode == .off {
+                enableScreenOCR = false
             }
         }
         .onChange(of: isHyperwhisperTranscription) { _, _ in

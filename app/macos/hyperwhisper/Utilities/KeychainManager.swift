@@ -71,6 +71,8 @@ class KeychainManager {
         case geminiTranscribe = "geminitranscribe"
         /// Isolated Meta Model API key slot. This value is never stored in defaults.
         case meta = "MetaApiKey"
+        /// Vercel AI Gateway API key (transcription). Never stored in defaults.
+        case vercelGateway = "VercelAIGatewayApiKey"
 
         /// User-friendly display name
         var displayName: String {
@@ -88,6 +90,7 @@ class KeychainManager {
             case .grok: return "Grok"
             case .geminiTranscribe: return "Gemini 3.5 Transcribe"
             case .meta: return "Meta"
+            case .vercelGateway: return "Vercel AI Gateway"
             }
         }
 
@@ -110,6 +113,7 @@ class KeychainManager {
             case .geminiTranscribe: return "geminiTranscribeAPIKey"
             // Meta postdates the defaults migration and has never had a defaults slot.
             case .meta: return "metaAPIKey"
+            case .vercelGateway: return "vercelGatewayAPIKey"
             }
         }
     }

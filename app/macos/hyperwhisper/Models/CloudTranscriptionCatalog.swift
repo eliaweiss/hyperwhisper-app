@@ -31,6 +31,7 @@ extension CloudTranscriptionModels {
             microsoftAzureSpeechModels(),
             googleSpeechModels(),
             grokModels(),
+            vercelGatewayModels(),
         ].flatMap { $0 }
         if isMetaBYOKCatalogEnabled {
             let catalogModel = CloudSTTCatalog.shared.defaultModel(
@@ -46,6 +47,37 @@ extension CloudTranscriptionModels {
             ))
         }
         return models
+    }
+
+    /// Vercel AI Gateway transcription models (`GET /v1/models`, type
+    /// `transcription`, batch only — the live/WebSocket ids are left out).
+    private static func vercelGatewayModels() -> [CloudTranscriptionModel] {
+        let rows: [(String, String, Bool, Double?)] = [
+            ("openai/gpt-4o-transcribe", "OpenAI GPT-4o Transcribe via Vercel AI Gateway.", true, 0.006 / 60.0),
+            ("openai/gpt-4o-mini-transcribe", "OpenAI GPT-4o Mini Transcribe via Vercel AI Gateway. Cheaper and faster.", true, 0.003 / 60.0),
+            ("openai/gpt-transcribe", "OpenAI GPT Transcribe via Vercel AI Gateway. Supports context and keyword hints.", true, nil),
+            ("openai/whisper-1", "OpenAI Whisper via Vercel AI Gateway.", false, 0.006 / 60.0),
+            ("elevenlabs/scribe-v2", "ElevenLabs Scribe v2 via Vercel AI Gateway. 90+ languages.", true, nil),
+            ("google/gemini-3.5-transcribe", "Google Gemini 3.5 Transcribe via Vercel AI Gateway.", true, nil),
+            // A general audio model, not a `transcription` one: it transcribes
+            // from a prompt, which carries the whole screen text and every
+            // vocabulary word (VercelAIGatewayProvider.isPromptedModel).
+            ("google/gemini-3.8-flash", "Google Gemini 3.8 Flash via Vercel AI Gateway. Transcribes from a prompt, so it can use all your vocabulary and the text on your screen.", true, nil),
+            ("microsoft/mai-transcribe-2", "Microsoft MAI-Transcribe 2 via Vercel AI Gateway. 60 languages, phrase-list biasing.", true, nil),
+            ("mistral/voxtral-mini-transcribe-3", "Mistral Voxtral Mini Transcribe 3 via Vercel AI Gateway.", false, nil),
+            ("mistral/voxtral-small-transcribe-3", "Mistral Voxtral Small Transcribe 3 via Vercel AI Gateway.", false, nil),
+            ("fish-audio/transcribe-1", "Fish Audio Transcribe-1 via Vercel AI Gateway.", false, nil),
+        ]
+        return rows.map { id, description, popular, price in
+            CloudTranscriptionModel(
+                id: id,
+                isAvailable: true,
+                description: description,
+                provider: .vercelGateway,
+                isPopular: popular,
+                pricePerSecond: price
+            )
+        }
     }
 
     private static func openAIModels() -> [CloudTranscriptionModel] {

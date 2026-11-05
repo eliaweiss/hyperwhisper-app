@@ -55,6 +55,7 @@ enum LibraryProviderKey: Hashable {
             // rather than shipping a second identical PNG.
             case .geminiTranscribe:    return "providerGemini"
             case .meta:                return nil
+            case .vercelGateway:       return nil
             }
         case .postProcessing(let provider):
             switch provider {
@@ -66,6 +67,7 @@ enum LibraryProviderKey: Hashable {
             case .grok:         return "providerGrok"
             case .cerebras:     return "providerCerebras"
             case .mistral:      return "providerMistral"
+            case .vercelGateway: return nil
             case .localLLM:     return "providerLocalLLM"
             }
         case .appleSpeech:   return "providerApple"
@@ -103,6 +105,7 @@ enum LibraryProviderKey: Hashable {
             case .googleSpeech: return "globe"
             case .geminiTranscribe: return "sparkle"
             case .meta: return "waveform"
+            case .vercelGateway: return "triangle.fill"
             }
         case .postProcessing(let provider):
             switch provider {
@@ -114,6 +117,7 @@ enum LibraryProviderKey: Hashable {
             case .grok: return "x.circle.fill"
             case .cerebras: return "cpu.fill"
             case .mistral: return "wind"
+            case .vercelGateway: return "triangle.fill"
             case .localLLM: return "internaldrive.fill"
             }
         case .appleSpeech:
@@ -303,6 +307,7 @@ extension CloudProvider {
         case .groq: return .groq
         case .grok: return .grok
         case .mistral: return .mistral
+        case .vercelGateway: return .vercelGateway
         // `.geminiTranscribe` deliberately stays unpaired: same vendor as
         // `.gemini`, but a separate BYOK key slot for a separate API. Pairing it
         // would overwrite the post-processing Gemini key from the transcription
@@ -319,6 +324,7 @@ extension CloudProvider {
         // Both Google slots take an AI Studio key; only the slot differs.
         case .gemini, .geminiTranscribe: return "AIza..."
         case .grok:       return "xai-..."
+        case .vercelGateway: return "vck_..."
         case .assemblyAI, .elevenLabs, .mistral, .soniox, .meta, .hyperwhisper, .microsoftAzureSpeech, .googleSpeech:
             return "Paste API key"
         }
@@ -333,6 +339,7 @@ extension PostProcessingProvider {
         case .groq: return .groq
         case .grok: return .grok
         case .mistral: return .mistral
+        case .vercelGateway: return .vercelGateway
         default: return nil
         }
     }
@@ -346,6 +353,7 @@ extension PostProcessingProvider {
         case .grok:       return "xai-..."
         case .cerebras:   return "csk-..."
         case .mistral:    return "Paste API key"
+        case .vercelGateway: return "vck_..."
         case .hyperwhisper, .localLLM:
             return "Paste API key"
         }

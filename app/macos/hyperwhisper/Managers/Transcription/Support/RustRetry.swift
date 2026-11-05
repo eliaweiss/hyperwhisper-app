@@ -418,6 +418,10 @@ enum RustCoreMapping {
         // no `CloudProvider` case, so it is unreachable from here.
         case .geminiTranscribe: return .geminiTranscribe
         case .meta: return .meta
+        // The core has no Vercel provider. Unreachable from the health probe:
+        // CloudProviderHealthManager checks the gateway in Swift before it
+        // would call the Rust probe. OpenAI is the closest wire shape.
+        case .vercelGateway: return .openai
         }
     }
 

@@ -180,6 +180,7 @@ const KNOWN_PROVIDER_IDS: &[&str] = &[
     "microsoftazurespeech",
     "googlespeech",
     "meta",
+    "vercelgateway",
 ];
 
 /// Resolve provider-specific model aliases before display, import or request

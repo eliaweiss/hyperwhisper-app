@@ -20,7 +20,13 @@ enum PostProcessingProvider: String, CaseIterable, Identifiable {
     case grok = "grok"
     case cerebras = "cerebras"
     case mistral = "mistral"
+    /// Vercel AI Gateway (OpenAI-compatible chat completions). Shares the
+    /// Vercel key with transcription; models are gateway `creator/model` ids.
+    case vercelGateway = "vercelgateway"
     case localLLM = "local_llm"
+
+    /// Chat-completions URL for `.vercelGateway`.
+    static let vercelGatewayChatURL = "https://ai-gateway.vercel.sh/v1/chat/completions"
 
     /// Accepts every spelling of a provider id that any HyperWhisper head has
     /// stored, and folds it onto the matching case.
@@ -171,6 +177,8 @@ enum PostProcessingProvider: String, CaseIterable, Identifiable {
             return "Cerebras"
         case .mistral:
             return "Mistral"
+        case .vercelGateway:
+            return "Vercel AI Gateway"
         case .localLLM:
             return "Local LLM"
         }
@@ -195,6 +203,8 @@ enum PostProcessingProvider: String, CaseIterable, Identifiable {
             return "Cerebras' ultra-fast LLM inference for text enhancement"
         case .mistral:
             return "Mistral's models for fast, multilingual text enhancement"
+        case .vercelGateway:
+            return "Any model on Vercel AI Gateway (OpenAI, Anthropic, Google, DeepSeek...) with one key"
         case .localLLM:
             return "Runs an on-device language model via llama.cpp. Private and offline."
         }
@@ -225,6 +235,9 @@ enum PostProcessingProvider: String, CaseIterable, Identifiable {
             return .cerebras
         case .mistral:
             return .mistral
+        case .vercelGateway:
+            // Sent through the core's OpenAI-compatible custom-endpoint builder.
+            return .custom
         case .localLLM:
             return .localLlama
         }
@@ -249,6 +262,8 @@ enum PostProcessingProvider: String, CaseIterable, Identifiable {
             return "https://cloud.cerebras.ai/"
         case .mistral:
             return "https://console.mistral.ai/api-keys"
+        case .vercelGateway:
+            return CloudProvider.vercelGateway.apiKeyURL
         case .localLLM:
             return ""
         }
@@ -275,6 +290,8 @@ enum PostProcessingProvider: String, CaseIterable, Identifiable {
             return "gpt-oss-120b"
         case .mistral:
             return "mistral-small-latest"
+        case .vercelGateway:
+            return "openai/gpt-5-mini"
         case .localLLM:
             return "gemma-4-E2B-it-Q4_K_M.gguf"
         }

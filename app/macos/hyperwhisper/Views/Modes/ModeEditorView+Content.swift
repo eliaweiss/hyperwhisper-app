@@ -31,7 +31,11 @@ extension ModeEditorView {
                     language: $language,
                     englishSpelling: $englishSpelling,
                     enableScreenOCR: $enableScreenOCR,
-                    cloudPostProcessingModel: $cloudPostProcessingModel
+                    cloudPostProcessingModel: $cloudPostProcessingModel,
+                    screenTextWorksWithoutPostProcessing: provider == .cloud
+                        && (currentCloudProvider == .gemini
+                            || (currentCloudProvider == .vercelGateway
+                                && cloudTranscriptionModel.lowercased().hasPrefix("google/")))
                 )
 
                 // Punctuation card

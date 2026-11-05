@@ -174,6 +174,14 @@ class APIKeySettingsManager: ObservableObject {
         }
     }
 
+    /// Vercel AI Gateway API key. Keychain is the only persistent store.
+    @Published var vercelGatewayAPIKey: String = "" {
+        didSet {
+            guard !isLoadingFromKeychain else { return }
+            saveAPIKeyToKeychain(vercelGatewayAPIKey, for: .vercelGateway)
+        }
+    }
+
     /// Whether to use OpenAI for transcription
     /// Stored in UserDefaults (not sensitive)
     @AppStorage("useOpenAITranscription") var useOpenAITranscription: Bool = false
@@ -229,6 +237,8 @@ class APIKeySettingsManager: ObservableObject {
             return geminiTranscribeAPIKey
         case .meta:
             return metaAPIKey
+        case .vercelGateway:
+            return vercelGatewayAPIKey
         }
     }
 
@@ -280,6 +290,8 @@ class APIKeySettingsManager: ObservableObject {
             geminiTranscribeAPIKey = key
         case .meta:
             metaAPIKey = key
+        case .vercelGateway:
+            vercelGatewayAPIKey = key
         }
         return true
     }
@@ -316,6 +328,8 @@ class APIKeySettingsManager: ObservableObject {
             return cerebrasAPIKey
         case .mistral:
             return mistralAPIKey  // Shared with Mistral/Voxtral transcription
+        case .vercelGateway:
+            return vercelGatewayAPIKey  // Shared with Vercel AI Gateway transcription
         case .localLLM:
             return ""  // Local Qwen doesn't require an API key
         }
@@ -343,6 +357,8 @@ class APIKeySettingsManager: ObservableObject {
             cerebrasAPIKey = key
         case .mistral:
             mistralAPIKey = key  // Shared with Mistral/Voxtral transcription
+        case .vercelGateway:
+            vercelGatewayAPIKey = key  // Shared with Vercel AI Gateway transcription
         case .localLLM:
             break  // Local Qwen doesn't require an API key
         }
@@ -486,6 +502,7 @@ class APIKeySettingsManager: ObservableObject {
         grokAPIKey = KeychainManager.shared.getAPIKey(for: .grok)
         geminiTranscribeAPIKey = KeychainManager.shared.getAPIKey(for: .geminiTranscribe)
         metaAPIKey = KeychainManager.shared.getAPIKey(for: .meta)
+        vercelGatewayAPIKey = KeychainManager.shared.getAPIKey(for: .vercelGateway)
 
         // Log configuration status (without exposing actual keys)
         let summary = KeychainManager.shared.getConfigurationSummary()
@@ -545,6 +562,8 @@ class APIKeySettingsManager: ObservableObject {
             return .geminiTranscribe
         case .meta:
             return .meta
+        case .vercelGateway:
+            return .vercelGateway
         }
     }
 }

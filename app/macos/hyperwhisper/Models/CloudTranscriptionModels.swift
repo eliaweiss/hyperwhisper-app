@@ -97,6 +97,8 @@ struct CloudTranscriptionModels {
             // its default is pinned — a catalog lookup on the dead id is nil and
             // we would post a request with an empty model.
             case .googleSpeech: return "chirp_3"
+            // Not in cloud-stt-catalog.json: the gateway is a macOS-only local addition.
+            case .vercelGateway: return VercelAIGatewayProvider.Constants.defaultModelID
             default: return ""
             }
         }
@@ -127,7 +129,7 @@ struct CloudTranscriptionModels {
         case .meta: return "metaMuse"
         case .grok: return "grokStt"
         case .microsoftAzureSpeech: return "azureMaiTranscribe"
-        case .hyperwhisper, .googleSpeech: return nil
+        case .hyperwhisper, .googleSpeech, .vercelGateway: return nil
         }
     }
 }

@@ -216,6 +216,16 @@ class AIPostProcessor: ObservableObject {
             return text
         }
 
+        // VERCEL AI GATEWAY: OpenAI-compatible chat completions, non-streaming.
+        if provider == .vercelGateway {
+            return try await performVercelGatewayPostProcessing(
+                text: trimmed,
+                mode: mode,
+                applicationContext: applicationContext,
+                mutationSignal: signal
+            )
+        }
+
         // HYPERWHISPER CLOUD STANDALONE POST-PROCESSING:
         // HyperWhisper Cloud can now be used as a standalone post-processing provider
         // independently of the transcription provider. This enables:
@@ -708,6 +718,16 @@ class AIPostProcessor: ObservableObject {
         }
 
         guard let provider = PostProcessingProvider(rawValue: providerString) else { return text }
+
+        // VERCEL AI GATEWAY: OpenAI-compatible chat completions, non-streaming.
+        if provider == .vercelGateway {
+            return try await performVercelGatewayPostProcessing(
+                text: trimmed,
+                mode: mode,
+                applicationContext: applicationContext,
+                mutationSignal: signal
+            )
+        }
 
         // HYPERWHISPER CLOUD: Use non-streaming method (backend doesn't support SSE streaming)
         if provider == .hyperwhisper {
@@ -1315,6 +1335,68 @@ class AIPostProcessor: ObservableObject {
             AppLogger.transcription.warning("Custom endpoint needs repair: \(verdict.message ?? "unknown", privacy: .public)")
         }
 
+        return try await performOpenAICompatiblePostProcessing(
+            text: text,
+            endpointURL: verdict.url,
+            model: verdict.model,
+            apiKey: KeychainManager.shared.getCustomEndpointAPIKey(for: endpointId),
+            label: endpoint.name,
+            displayURL: endpoint.displayURL,
+            resolvedProvider: providerString,
+            mode: mode,
+            applicationContext: applicationContext,
+            signal: signal
+        )
+    }
+
+    /// Post-process through Vercel AI Gateway with the Vercel key (the same
+    /// Keychain slot transcription uses) and the mode's `languageModel`, a
+    /// gateway `creator/model` id.
+    private func performVercelGatewayPostProcessing(
+        text: String,
+        mode: Mode?,
+        applicationContext: ApplicationContext?,
+        mutationSignal: MutationSignal? = nil
+    ) async throws -> String {
+        let signal = mutationSignal ?? MutationSignal()
+        let apiKey = KeychainManager.shared.getAPIKey(for: .vercelGateway)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !apiKey.isEmpty else {
+            AppLogger.transcription.warning("Vercel AI Gateway post-processing skipped: no API key")
+            onPostProcessingError?(TranscriptionError.apiKeyMissing(provider: PostProcessingProvider.vercelGateway.displayName))
+            return text
+        }
+        let stored = mode?.languageModel?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let model = stored.contains("/") ? stored : PostProcessingProvider.vercelGateway.defaultModel
+        return try await performOpenAICompatiblePostProcessing(
+            text: text,
+            endpointURL: PostProcessingProvider.vercelGatewayChatURL,
+            model: model,
+            apiKey: apiKey,
+            label: PostProcessingProvider.vercelGateway.displayName,
+            displayURL: PostProcessingProvider.vercelGatewayChatURL,
+            resolvedProvider: PostProcessingProvider.vercelGateway.rawValue,
+            mode: mode,
+            applicationContext: applicationContext,
+            signal: signal
+        )
+    }
+
+    /// Steps 4-8 of a chat-completions post-processing call against any
+    /// OpenAI-compatible URL: shared by user-defined custom endpoints and the
+    /// built-in Vercel AI Gateway provider.
+    private func performOpenAICompatiblePostProcessing(
+        text: String,
+        endpointURL: String,
+        model: String,
+        apiKey: String,
+        label: String,
+        displayURL: String,
+        resolvedProvider: String,
+        mode: Mode?,
+        applicationContext: ApplicationContext?,
+        signal: MutationSignal
+    ) async throws -> String {
         // STEP 4: Check network connectivity
         guard NetworkStatus.shared.isOnline else {
             AppLogger.transcription.warning("Custom endpoint post-processing skipped: Offline")
@@ -1343,17 +1425,16 @@ class AIPostProcessor: ObservableObject {
         // the `--TRANSCRIPT--` wrapper and the Groq host sniff (a custom endpoint
         // pointed at Groq's own API hits the same undocumented completion-token
         // default) all live there.
-        let apiKey = KeychainManager.shared.getCustomEndpointAPIKey(for: endpointId)
         var request: URLRequest
         do {
             let built = try llmBuildRequest(params: HwLlmParams(
                 provider: .custom,
-                model: verdict.model,
+                model: model,
                 apiKey: apiKey,
                 systemPrompt: systemPrompt,
                 systemInfo: systemInfo,
                 transcript: text,
-                customEndpoint: verdict.url
+                customEndpoint: endpointURL
             ))
             request = try RustHTTPExecutor.buildInlineURLRequest(from: built)
         } catch {
@@ -1364,8 +1445,8 @@ class AIPostProcessor: ObservableObject {
 
         // STEP 7: Log request details
         AppLogger.transcription.info("Starting custom endpoint post-processing")
-        AppLogger.network.info("POST \(endpoint.displayURL, privacy: .public)")
-        AppLogger.network.debug("Model: \(endpoint.modelName, privacy: .public)")
+        AppLogger.network.info("POST \(displayURL, privacy: .public)")
+        AppLogger.network.debug("Model: \(model, privacy: .public)")
 
         // STEP 8: Perform request with retry logic
         let config = RetryConfiguration.postProcessing
@@ -1404,15 +1485,15 @@ class AIPostProcessor: ObservableObject {
                     }
 
                     AppLogger.transcription.info("Custom endpoint post-processing completed successfully")
-                    AppLogger.network.info("Response from \(endpoint.name, privacy: .public): \(evaluation.text.count, privacy: .public) characters")
+                    AppLogger.network.info("Response from \(label, privacy: .public): \(evaluation.text.count, privacy: .public) characters")
                     self.didMutateLastRun = true; signal.didMutate = true
                     // Record what RAN (#314). The provider stays the caller's own
                     // `custom:<uuid>` string — that IS the resolved provider, and
                     // it is the wire vocabulary. `verdict.model` is the model the
                     // lenient validator repaired to and that went into the request,
                     // which can differ from the endpoint's stored `modelName`.
-                    signal.resolvedProvider = providerString
-                    signal.resolvedModel = verdict.model
+                    signal.resolvedProvider = resolvedProvider
+                    signal.resolvedModel = model
                     return evaluation.text
                 }
 
@@ -1425,7 +1506,7 @@ class AIPostProcessor: ObservableObject {
 
                 switch httpResponse.statusCode {
                 case 401, 403:
-                    throw TranscriptionError.unauthorized(provider: endpoint.name, statusCode: httpResponse.statusCode)
+                    throw TranscriptionError.unauthorized(provider: label, statusCode: httpResponse.statusCode)
                 case 400, 413, 415, 422:
                     throw TranscriptionError.invalidRequest
                 case 429:

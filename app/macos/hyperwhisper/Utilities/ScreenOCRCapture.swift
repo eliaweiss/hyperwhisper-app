@@ -57,9 +57,12 @@ class ScreenOCRCapture {
     ///
     /// - Parameters:
     ///   - frontmostPID: The process identifier of the frontmost application at recording start
-    ///   - maxCharacters: Maximum number of characters to return (default: 2000)
+    ///   - maxCharacters: Maximum number of characters to return (default: 4000).
+    ///     Text is read top-to-bottom, so a low cap drops what is lower on the
+    ///     screen; a model that takes the text as a prompt (Gemini 3.8 Flash)
+    ///     has room for more than the old 2000.
     /// - Returns: Extracted text from the screen, or nil
-    func captureAndOCR(frontmostPID: pid_t?, maxCharacters: Int = 2000) async -> String? {
+    func captureAndOCR(frontmostPID: pid_t?, maxCharacters: Int = 4000) async -> String? {
         // Skip when frontmost PID is unknown (can't verify we're not capturing ourselves)
         guard let pid = frontmostPID else {
             AppLogger.audio.debug("Screen OCR skipped: frontmost PID unknown")

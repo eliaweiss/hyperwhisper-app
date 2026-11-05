@@ -143,6 +143,7 @@ struct ProviderIconView: View {
             case .googleSpeech: return .red
             case .geminiTranscribe: return Brand.gemini
             case .meta: return .blue
+            case .vercelGateway: return .black
             }
         case .postProcessing(let provider):
             switch provider {
@@ -154,6 +155,7 @@ struct ProviderIconView: View {
             case .grok: return Brand.grok
             case .cerebras: return Brand.cerebras
             case .mistral: return Brand.mistral
+            case .vercelGateway: return .black
             case .localLLM: return .gray
             }
         case .appleSpeech:

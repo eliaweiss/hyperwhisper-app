@@ -234,6 +234,78 @@ struct PostProcessingModels {
             provider: .mistral
         ),
 
+        // MARK: - Vercel AI Gateway Models (gateway creator/model ids)
+        PostProcessingModel(
+            id: "openai/gpt-5-mini",
+            displayName: "GPT-5 Mini",
+            isAvailable: true,
+            description: "Fast, low-cost OpenAI model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "openai/gpt-5.6-luna",
+            displayName: "GPT-5.6 Luna",
+            isAvailable: true,
+            description: "OpenAI's current default text model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "anthropic/claude-haiku-5.5",
+            displayName: "Claude Haiku 5.5",
+            isAvailable: true,
+            description: "Fast Anthropic model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "google/gemini-3.5-flash",
+            displayName: "Gemini 3.5 Flash",
+            isAvailable: true,
+            description: "Fast Google model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "google/gemini-3.5-flash-lite",
+            displayName: "Gemini 3.5 Flash Lite",
+            isAvailable: true,
+            description: "Cheapest, fastest Google model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "deepseek/deepseek-v4.1-flash",
+            displayName: "DeepSeek V4.1 Flash",
+            isAvailable: true,
+            description: "Fast DeepSeek model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "deepseek/deepseek-v4.1-flash-1017",
+            displayName: "DeepSeek V4.1 Flash (1017)",
+            isAvailable: true,
+            description: "Dated DeepSeek V4.1 Flash snapshot via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "openai/gpt-oss-120b",
+            displayName: "GPT OSS 120B",
+            isAvailable: true,
+            description: "Open-weight OpenAI model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "mistral/mistral-small",
+            displayName: "Mistral Small",
+            isAvailable: true,
+            description: "Fast, multilingual via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+        PostProcessingModel(
+            id: "meta/llama-4-scout",
+            displayName: "Llama 4 Scout",
+            isAvailable: true,
+            description: "Fast open Meta model via Vercel AI Gateway",
+            provider: .vercelGateway
+        ),
+
         // MARK: - Local LLM Models
         PostProcessingModel(
             id: "gemma-4-E2B-it-Q4_K_M.gguf",

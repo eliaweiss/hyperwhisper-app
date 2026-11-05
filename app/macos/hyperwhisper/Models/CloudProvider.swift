@@ -26,6 +26,9 @@ enum CloudProvider: String, CaseIterable, Identifiable {
     /// Meta Muse batch transcription using the user's own Meta Model API key.
     /// Public discovery stays catalog-gated until every desktop head ships it.
     case meta = "meta"
+    /// Vercel AI Gateway: one AI Gateway key reaches every transcription model
+    /// the gateway lists (`creator/model` ids). macOS-only, request built in Swift.
+    case vercelGateway = "vercelgateway"
 
     var id: String { rawValue }
 
@@ -125,6 +128,8 @@ enum CloudProvider: String, CaseIterable, Identifiable {
             return "Gemini 3.5 Transcribe"
         case .meta:
             return "Meta"
+        case .vercelGateway:
+            return "Vercel AI Gateway"
         }
     }
 
@@ -159,6 +164,8 @@ enum CloudProvider: String, CaseIterable, Identifiable {
             return "Google's dedicated Gemini 3.5 speech-to-text API with native custom vocabulary"
         case .meta:
             return "Meta Muse Voice Transcribe batch speech-to-text"
+        case .vercelGateway:
+            return "Any transcription model on Vercel AI Gateway (OpenAI, ElevenLabs, Google, Microsoft, Mistral...) with one key"
         }
     }
 
@@ -189,6 +196,8 @@ enum CloudProvider: String, CaseIterable, Identifiable {
             return "https://console.x.ai/"
         case .meta:
             return "https://dev.meta.ai/docs/speech-to-text/"
+        case .vercelGateway:
+            return "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway%2Fapi-keys&title=AI+Gateway+API+Keys"
         case .microsoftAzureSpeech, .googleSpeech:
             // HyperWhisper Cloud only — no BYOK in v1.
             return "https://www.hyperwhisper.com"
@@ -260,6 +269,8 @@ enum CloudProvider: String, CaseIterable, Identifiable {
             return 14 * 1024 * 1024  // 14 MB
         case .meta:
             return 32 * 1024 * 1024
+        case .vercelGateway:
+            return VercelAIGatewayProvider.Constants.maxUploadBytes
         }
     }
 
@@ -338,6 +349,12 @@ enum CloudProvider: String, CaseIterable, Identifiable {
         case .meta:
             // Imported containers are normalized to canonical Muse WAV before upload.
             return ["wav", "mp3", "mp4", "m4a", "webm", "flac", "ogg", "aac"]
+
+        case .vercelGateway:
+            // Passed through to the upstream model; the common set every
+            // gateway transcription model accepts (MP4/M4A is re-encoded to
+            // WAV for Microsoft models).
+            return ["wav", "mp3", "mp4", "m4a", "flac", "ogg", "webm"]
 
         case .microsoftAzureSpeech:
             // Azure Speech Foundry transcribe endpoint — common containers

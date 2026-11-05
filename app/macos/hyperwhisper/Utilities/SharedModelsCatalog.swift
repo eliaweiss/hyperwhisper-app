@@ -121,6 +121,7 @@ extension SharedModelsCatalog {
         // round-trip through the Local API's `engine.lowercased()`).
         case .geminiTranscribe:    return "geminiTranscribe"
         case .meta:                return "meta"
+        case .vercelGateway:       return "vercelGateway"
         }
     }
 
@@ -134,6 +135,7 @@ extension SharedModelsCatalog {
         case .grok:         return "grok"
         case .cerebras:     return "cerebras"
         case .mistral:      return "mistral"
+        case .vercelGateway: return "vercelGateway"
         case .localLLM:     return "localLLM"
         }
     }

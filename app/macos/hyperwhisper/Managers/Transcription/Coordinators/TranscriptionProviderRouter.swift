@@ -74,6 +74,7 @@ class TranscriptionProviderRouter {
     /// `geminiTranscriptionProvider`: different endpoint, different key slot.
     private let geminiTranscribeProvider = GeminiTranscribeProvider()
     private let metaMuseProvider = MetaMuseProvider()
+    private let vercelGatewayProvider = VercelAIGatewayProvider()
 
     /// HyperWhisper-Cloud-routed providers (no BYOK). Constructed lazily when
     /// the HW Cloud managers are available, mirroring `hyperwhisperCloudProvider`.
@@ -719,6 +720,8 @@ class TranscriptionProviderRouter {
             geminiTranscribeProvider.configure(apiKey: apiKey)
         case .meta:
             metaMuseProvider.configure(apiKey: apiKey)
+        case .vercelGateway:
+            vercelGatewayProvider.configure(apiKey: apiKey)
         }
     }
 
@@ -776,6 +779,8 @@ class TranscriptionProviderRouter {
             return geminiTranscribeProvider
         case .meta:
             return metaMuseProvider
+        case .vercelGateway:
+            return vercelGatewayProvider
         }
     }
 

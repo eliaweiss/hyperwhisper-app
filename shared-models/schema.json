@@ -55,6 +55,7 @@
             "microsoftAzureSpeech",
             "googleSpeech",
             "meta",
+            "vercelGateway",
             "appleSpeech",
             "localWhisper",
             "parakeet",

@@ -126,6 +126,12 @@ extension ModeEditorView {
                 geminiCustomPromptEditor
             }
 
+            // Gemini 3.8 Flash on Vercel AI Gateway transcribes from a prompt
+            if currentCloudProvider == .vercelGateway
+                && VercelAIGatewayProvider.isPromptedModel(cloudTranscriptionModel) {
+                vercelTranscriptionPromptEditor
+            }
+
             // A missing or unhealthy key. The notice is in ModeEditorView.swift.
             if currentProviderNeedsAttention {
                 yourProviderNeedsKeyNotice
@@ -281,6 +287,75 @@ extension ModeEditorView {
             Text(localized: "modes.gemini.customPrompt.helper")
                 .font(.caption2)
                 .foregroundColor(.secondary)
+        }
+    }
+
+    /// The instruction a prompted Vercel model (Gemini 3.8 Flash) receives with
+    /// the recording. Stored in the mode's Gemini prompt field; empty means the
+    /// built-in default (`VercelAIGatewayProvider.defaultTranscriptionInstruction`),
+    /// shown greyed out. Vocabulary and screen text are appended by the
+    /// provider, so they are not part of what the user edits.
+    private var vercelTranscriptionPromptEditor: some View {
+        let isDefault = geminiCustomPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(verbatim: "Transcription prompt")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                Spacer()
+                if isDefault {
+                    Button {
+                        geminiCustomPrompt = VercelAIGatewayProvider.defaultTranscriptionInstruction
+                    } label: {
+                        Text(verbatim: "Edit the default")
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                } else {
+                    Button {
+                        geminiCustomPrompt = ""
+                    } label: {
+                        Text(verbatim: "Reset to default")
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                }
+            }
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $geminiCustomPrompt)
+                    .font(.body)
+                    .frame(height: 120)
+                    .padding(6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(NSColor.textBackgroundColor))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color(NSColor.separatorColor), lineWidth: 1)
+                    )
+                    .onChange(of: geminiCustomPrompt) { _, newValue in
+                        if newValue.count > geminiCustomPromptCharacterLimit {
+                            geminiCustomPrompt = String(newValue.prefix(geminiCustomPromptCharacterLimit))
+                        }
+                    }
+
+                if isDefault {
+                    Text(verbatim: VercelAIGatewayProvider.defaultTranscriptionInstruction)
+                        .font(.body)
+                        .foregroundColor(.secondary.opacity(0.7))
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 6)
+                        .allowsHitTesting(false)
+                }
+            }
+
+            Text(verbatim: "Sent with every recording. Your vocabulary and, when Screen Text is on, the text on your screen are added after it automatically. Leave it empty to use the default shown above.")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

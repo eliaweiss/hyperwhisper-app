@@ -681,6 +681,11 @@ final class CloudProviderHealthManager: ObservableObject {
         // Meta documents no content-free key validation endpoint. A saved key
         // is configured and is validated by the first real transcription.
         if provider == .meta { return .configured }
+        if provider == .vercelGateway {
+            return await runHealthCheckWithRetry(force: force) {
+                await VercelAIGatewayProvider.healthCheck(apiKey: apiKey)
+            }
+        }
 
         return await runHealthCheckWithRetry(force: force) {
             // RUST SHARED CORE (Wave 3 / M3-B.4): every STT provider's probe URL,
@@ -707,6 +712,11 @@ final class CloudProviderHealthManager: ObservableObject {
         guard !apiKey.isEmpty else { return .unknown }
 
         if provider == .meta { return .configured }
+        if provider == .vercelGateway {
+            return await runHealthCheckWithRetry(force: true) {
+                await VercelAIGatewayProvider.healthCheck(apiKey: apiKey)
+            }
+        }
 
         return await runHealthCheckWithRetry(force: true) {
             await self.performRustHealthCheck(for: provider, apiKey: apiKey)
@@ -800,6 +810,8 @@ final class CloudProviderHealthManager: ObservableObject {
                 return await self.performCerebrasHealthCheck(apiKey: apiKey)
             case .mistral:
                 return await self.mistralProvider.healthCheck(apiKey: apiKey)
+            case .vercelGateway:
+                return await VercelAIGatewayProvider.healthCheck(apiKey: apiKey)
             case .localLLM:
                 return Self.localLLMStatus()
             }

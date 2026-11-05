@@ -304,14 +304,22 @@ extension TranscriptionPipeline {
             var failedAttemptProviderDiagnostics: TranscriptionAttemptDiagnostics?
             let providerClock = ContinuousClock()
             let providerStart = providerClock.now
+            // Screen Text for a transcription model that reads it (Gemini's
+            // prompt path), for this call only. A task-local, so a concurrent
+            // pass on the same provider never sees it.
+            let screenTextForCall: String? = (mode?.enableScreenOCR == true)
+                ? applicationContext?.screenOCRText
+                : nil
             do {
                 do {
-                    outcome = try await provider.transcribeDetailed(
-                        audioURL: audioURL,
-                        language: languageArg,
-                        mode: mode,
-                        vocabulary: vocabulary
-                    )
+                    outcome = try await ScreenTextTranscriptionContext.$screenText.withValue(screenTextForCall) {
+                        try await provider.transcribeDetailed(
+                            audioURL: audioURL,
+                            language: languageArg,
+                            mode: mode,
+                            vocabulary: vocabulary
+                        )
+                    }
                 } catch let failure as TranscriptionAttemptFailure {
                     failedAttemptProviderDiagnostics = failure.diagnostics
                     throw failure.underlying

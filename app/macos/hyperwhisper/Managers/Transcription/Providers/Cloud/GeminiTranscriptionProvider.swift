@@ -87,7 +87,15 @@ class GeminiTranscriptionProvider: TranscriptionProvider {
             : CloudTranscriptionModels.resolveGeminiModelAlias(rawModel)
         let mimeType = AudioMimeTypeResolver.infer(for: audioURL, fallback: "audio/wav")
         let customPrompt = mode?.geminiCustomPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let promptForCore: String? = (customPrompt?.isEmpty == false) ? customPrompt : nil
+        // Screen Text: the capture goes in after the custom prompt as reference
+        // material, so Gemini spells on-screen names right with no
+        // post-processing LLM. nil unless the mode has Screen Text on.
+        let screenText = ScreenTextTranscriptionContext.screenText
+        let promptForCore = ScreenTextTranscriptionContext.prompt(
+            customPrompt: customPrompt, screenText: screenText)
+        if let screenText {
+            AppLogger.transcription.info("Gemini prompt includes screen text · chars=\(screenText.count, privacy: .public)")
+        }
         let params = RustCoreMapping.transcribeParams(
             audioPath: audioURL.path,
             audioMime: mimeType,
