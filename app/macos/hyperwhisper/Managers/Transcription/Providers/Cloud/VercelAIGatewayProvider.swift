@@ -77,7 +77,7 @@ final class VercelAIGatewayProvider: TranscriptionProvider {
 
         let mime = AudioMimeTypeResolver.infer(for: audioURL, fallback: "audio/wav")
 
-        // A general audio model (Gemini 3.8 Flash) transcribes from a prompt,
+        // A general audio model (Gemini Flash / Flash Lite) transcribes from a prompt,
         // which can carry the whole screen text and every vocabulary word.
         // Gemini reads WAV, MP3, AAC, FLAC, OGG and AIFF, not an MP4 container.
         if Self.isPromptedModel(model) {

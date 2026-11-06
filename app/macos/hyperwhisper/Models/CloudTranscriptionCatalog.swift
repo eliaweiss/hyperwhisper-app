@@ -63,6 +63,10 @@ extension CloudTranscriptionModels {
             // from a prompt, which carries the whole screen text and every
             // vocabulary word (VercelAIGatewayProvider.isPromptedModel).
             ("google/gemini-3.8-flash", "Google Gemini 3.8 Flash via Vercel AI Gateway. Transcribes from a prompt, so it can use all your vocabulary and the text on your screen.", true, nil),
+            // Same prompted path, same request. Measured 2026-11-06 on 15 s and
+            // 64 s WAVs: ~2–3 s against 3.8 Flash's 4–14 s, at a lower token price.
+            ("google/gemini-3.5-flash-lite", "Google Gemini 3.5 Flash Lite via Vercel AI Gateway. Much faster and cheaper than 3.8 Flash; transcribes from a prompt, with your vocabulary and screen text.", true, nil),
+            ("google/gemini-3.1-flash-lite", "Google Gemini 3.1 Flash Lite via Vercel AI Gateway. Fastest and cheapest Gemini; transcribes from a prompt, with your vocabulary and screen text.", false, nil),
             ("microsoft/mai-transcribe-2", "Microsoft MAI-Transcribe 2 via Vercel AI Gateway. 60 languages, phrase-list biasing.", true, nil),
             ("mistral/voxtral-mini-transcribe-3", "Mistral Voxtral Mini Transcribe 3 via Vercel AI Gateway.", false, nil),
             ("mistral/voxtral-small-transcribe-3", "Mistral Voxtral Small Transcribe 3 via Vercel AI Gateway.", false, nil),
